@@ -110,6 +110,30 @@ import lime.system.JNI;
 		funcBuy (productID, devPayload);
 	}
 
+	/**
+	 * Sends a purchase intent for a given product.
+	 *
+	 * @param productID (iOS & Android). The unique Id for the desired product (Android Sku).
+	 * @param devPayload (Android). Extra data (developer payload), which will be returned with the purchase data
+	 *     when the purchase completes. This extra data will be permanently bound to that purchase
+	 *     and will always be returned when the purchase is queried.
+	 *
+	 * Related Events (IAPEvent):
+	 * 		PURCHASE_SUCCESS: Fired when the purchase attempt was successful
+	 * 		PURCHASE_FAILURE: Fired when the purchase attempt failed
+	 * 		PURCHASE_CANCEL: Fired when the purchase attempt was cancelled by the user
+	 */
+
+	public static function purchaseSubscription (productID:String, devPayload:String = ""):Void {
+
+		if (funcBuySubscription == null) {
+			funcBuySubscription = JNI.createStaticMethod ("org/haxe/extension/iap/InAppPurchase", "buySubscription", "(Ljava/lang/String;Ljava/lang/String;)V");
+		}
+
+		IAPHandler.lastPurchaseRequest = productID;
+		funcBuySubscription (productID, devPayload);
+	}
+
 
 	/**
 	 * Retrieves localized information about a list of products.
@@ -218,6 +242,7 @@ import lime.system.JNI;
 	// Native Methods
 	private static var funcInit:Dynamic;
 	private static var funcBuy:Dynamic;
+	private static var funcBuySubscription:Dynamic;
 	private static var funcConsume:Dynamic;
 	private static var funcRestore:Dynamic;
 	private static var funcQueryInventory:Dynamic;
