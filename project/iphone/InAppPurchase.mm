@@ -98,11 +98,15 @@ extern "C" void sendPurchaseProductDataEvent(const char* type, const char* produ
 	
 	if(productID)
 	{
-		sendPurchaseEvent("failed", [productID UTF8String]);
+		dispatch_async(dispatch_get_main_queue(), ^{	
+			sendPurchaseEvent("failed", [productID UTF8String]);
+		});
 	}
 	else
 	{
-		sendPurchaseEvent("productDataFailed", [error.localizedDescription UTF8String]);
+		dispatch_async(dispatch_get_main_queue(), ^{	
+			sendPurchaseEvent("productDataFailed", [error.localizedDescription UTF8String]);
+		});
 	}
 }
 
@@ -147,11 +151,15 @@ extern "C" void sendPurchaseProductDataEvent(const char* type, const char* produ
 
 				int priceAmountMicros = [[prod.price decimalNumberByMultiplyingBy:[NSDecimalNumber decimalNumberWithString:@"1000000"]] intValue];			
 
-				sendPurchaseProductDataEvent("productData", [prod.productIdentifier UTF8String], [prod.localizedTitle UTF8String], [prod.localizedDescription UTF8String], priceAmountMicros, [formattedPrice UTF8String], [priceCurrencyCode UTF8String]);
+				dispatch_async(dispatch_get_main_queue(), ^{	
+					sendPurchaseProductDataEvent("productData", [prod.productIdentifier UTF8String], [prod.localizedTitle UTF8String], [prod.localizedDescription UTF8String], priceAmountMicros, [formattedPrice UTF8String], [priceCurrencyCode UTF8String]);
+				});	
 
 			}
-			
-			sendPurchaseEvent("productDataComplete", nil);
+		
+			dispatch_async(dispatch_get_main_queue(), ^{	
+				sendPurchaseEvent("productDataComplete", nil);
+			});
 		}
 	} 
     
@@ -192,7 +200,9 @@ extern "C" void sendPurchaseProductDataEvent(const char* type, const char* produ
         NSData *receipt = [NSData dataWithContentsOfURL:receiptURL];
         NSString *jsonObjectString = [receipt base64EncodedStringWithOptions:0];
 
-        sendPurchaseFinishEvent("success", [transaction.payment.productIdentifier UTF8String], [transaction.transactionIdentifier UTF8String], ([transaction.transactionDate timeIntervalSince1970] * 1000), [jsonObjectString UTF8String]);
+		dispatch_async(dispatch_get_main_queue(), ^{	
+			sendPurchaseFinishEvent("success", [transaction.payment.productIdentifier UTF8String], [transaction.transactionIdentifier UTF8String], ([transaction.transactionDate timeIntervalSince1970] * 1000), [jsonObjectString UTF8String]);
+		});
     }
     
     else
@@ -202,7 +212,9 @@ extern "C" void sendPurchaseProductDataEvent(const char* type, const char* produ
         {
             NSLog(@"Transaction error: %@", transaction.error.localizedDescription);
         }
-        sendPurchaseEvent("failed", [transaction.payment.productIdentifier UTF8String]);
+		dispatch_async(dispatch_get_main_queue(), ^{	
+			sendPurchaseEvent("failed", [transaction.payment.productIdentifier UTF8String]);
+		});
     }
 }
 
@@ -210,7 +222,9 @@ extern "C" void sendPurchaseProductDataEvent(const char* type, const char* produ
 {
 
 	if (transaction.downloads && transaction.downloads.count > 0) {
-		sendPurchaseDownloadEvent("downloadStart", [transaction.payment.productIdentifier UTF8String], [transaction.transactionIdentifier UTF8String], nil, nil, nil);
+		dispatch_async(dispatch_get_main_queue(), ^{	
+			sendPurchaseDownloadEvent("downloadStart", [transaction.payment.productIdentifier UTF8String], [transaction.transactionIdentifier UTF8String], nil, nil, nil);
+		});
 		[[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
 		
 	} else {
@@ -238,7 +252,9 @@ extern "C" void sendPurchaseProductDataEvent(const char* type, const char* produ
     else
     {
     	NSLog(@"Canceled Purchase");
-    	sendPurchaseEvent("cancel", [transaction.payment.productIdentifier UTF8String]);
+		dispatch_async(dispatch_get_main_queue(), ^{	
+			sendPurchaseEvent("cancel", [transaction.payment.productIdentifier UTF8String]);
+		});
         [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
     }
 }
@@ -278,14 +294,18 @@ extern "C" void sendPurchaseProductDataEvent(const char* type, const char* produ
             case SKDownloadStateActive:
                 NSLog(@"Download progress = %f and Download time: %f", download.progress, download.timeRemaining);
 				
-				sendPurchaseDownloadEvent("downloadProgress", [download.contentIdentifier UTF8String], [download.transaction.transactionIdentifier UTF8String], [[download.contentURL absoluteString] UTF8String], [download.contentVersion UTF8String], [[NSString stringWithFormat:@"%f", download.progress] UTF8String]);
-				
+				dispatch_async(dispatch_get_main_queue(), ^{	
+					sendPurchaseDownloadEvent("downloadProgress", [download.contentIdentifier UTF8String], [download.transaction.transactionIdentifier UTF8String], [[download.contentURL absoluteString] UTF8String], [download.contentVersion UTF8String], [[NSString stringWithFormat:@"%f", download.progress] UTF8String]);
+				});
+
                 break;
             case SKDownloadStateFinished:
                 NSLog(@"Download complete: %@",download.contentURL);
 				
-				sendPurchaseDownloadEvent("downloadComplete", [download.contentIdentifier UTF8String], [download.transaction.transactionIdentifier UTF8String], [[download.contentURL absoluteString] UTF8String], [download.contentVersion UTF8String], nil);
-				
+				dispatch_async(dispatch_get_main_queue(), ^{	
+					sendPurchaseDownloadEvent("downloadComplete", [download.contentIdentifier UTF8String], [download.transaction.transactionIdentifier UTF8String], [[download.contentURL absoluteString] UTF8String], [download.contentVersion UTF8String], nil);
+				});
+
 				[self finishTransaction:download.transaction wasSuccessful:YES];
                 // Download is complete. Content file URL is at
                 // path referenced by download.contentURL. Move
@@ -301,13 +321,17 @@ extern "C" void sendPurchaseProductDataEvent(const char* type, const char* produ
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
 {
 	NSLog(@"Restore complete!");
-	sendPurchaseEvent("productsRestored", "");
+	dispatch_async(dispatch_get_main_queue(), ^{	
+		sendPurchaseEvent("productsRestored", "");
+	});
 }
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error
 {
 	NSLog(@"Error restoring transactions");
-	sendPurchaseEvent("productsRestoredWithErrors", "");
+	dispatch_async(dispatch_get_main_queue(), ^{	
+		sendPurchaseEvent("productsRestoredWithErrors", "");
+	});
 	
 }
 
